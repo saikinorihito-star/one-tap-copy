@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f6f8fb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ワンタップコピー">
+  <meta name="description" content="登録した文章をワンタップでコピーできる、自分専用の定型文アプリ。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <title>ワンタップコピー</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;color:#14243c;background:#f6f8fb;font-synthesis:none;-webkit-text-size-adjust:100%}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100dvh}
+    button,input,textarea{font:inherit}
+    button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #8db8ff;outline-offset:3px}
+    .app{max-width:680px;margin:auto;padding:0 17px calc(118px + env(safe-area-inset-bottom))}
+    .head{padding:calc(23px + env(safe-area-inset-top)) 0 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .eyebrow{margin:0 0 6px;font-size:12px;color:#567091;font-weight:700;letter-spacing:.08em}
+    h1{margin:0;font-size:26px;letter-spacing:-.055em;line-height:1.3}
+    .sub{font-size:13px;color:#687a92;margin:7px 0 0}
+    .settings{flex:none;width:42px;height:42px;background:#fff;border:1px solid #e0e6ef;border-radius:14px;font-size:20px;color:#344c6c}
+    .searchwrap{position:relative;margin:10px 0 14px}
+    .searchwrap span{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#7a8ca2;font-size:19px;pointer-events:none}
+    #search{width:100%;height:52px;border:1px solid #e2e7f0;background:#fff;border-radius:15px;padding:0 15px 0 43px;font-size:16px;color:#14243c}
+    .chips{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:2px 1px 13px;white-space:nowrap}
+    .chips::-webkit-scrollbar{display:none}
+    .chip{border:1px solid #e2e7ee;background:#fff;color:#52657e;font-weight:700;border-radius:100px;padding:9px 14px;font-size:13px;min-height:40px}
+    .chip.active{color:#fff;background:#254d87;border-color:#254d87}
+    .line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px}
+    .line h2{font-size:15px;margin:0;font-weight:800}
+    .lineactions{display:flex;align-items:center;gap:10px;flex:none}
+    .reorder{border:1px solid #d5e2f2;background:#fff;color:#254f85;border-radius:11px;padding:9px 10px;font-size:12px;font-weight:800;min-height:38px}
+    .reorder.active{background:#254f85;color:#fff}
+    .reorder:disabled{opacity:.45;cursor:default}
+    .reorderhint{font-size:12px;line-height:1.6;color:#567091;margin:0 0 12px}
+    .count{font-size:12px;color:#8492a6;font-weight:700}
+    .entries{display:grid;gap:11px}
+    .entry{background:#fff;border:1px solid #e6ebf2;border-left:5px solid var(--cat-accent,#d8e5f3);box-shadow:0 3px 13px rgba(31,57,92,.035);border-radius:19px;padding:13px 14px 12px}
+    .entrytop{display:flex;gap:10px;align-items:center;margin-bottom:7px}
+    .entrytitle{font-size:15px;font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .favorite{border:0;background:transparent;color:#9baabd;font-size:22px;width:34px;height:34px;line-height:1;border-radius:10px;flex:none}
+    .favorite.selected{color:#f3b23d}
+    .edit{border:0;background:#f1f5fa;color:#527092;font-size:12px;font-weight:700;border-radius:9px;padding:8px 11px;flex:none}
+    .copy{display:block;width:100%;border:0;background:#f6f9fd;color:inherit;border-radius:13px;padding:12px 12px 14px;text-align:left;min-height:70px}
+    .copy:active{background:#e8f1ff;transform:scale(.995)}
+    .textcontent{font-size:14px;color:#30445f;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;line-height:1.65}
+    .copyfoot{margin-top:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#6b83a1;font-size:11px}
+    .category{background:#e9eff7;padding:4px 9px;border-radius:7px;color:#4a688a}
+    .copyfootleft{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .copycount{color:#6c7d95;font-size:11px;font-weight:700}
+    .movebar{display:flex;gap:8px;margin:0 0 10px}
+    .movebutton{flex:1;border:1px solid #d5e2f2;background:#f4f8fc;color:#2f5b8c;border-radius:11px;min-height:43px;font-weight:800;font-size:13px}
+    .movebutton:disabled{color:#afbbca;background:#f9fafc;cursor:default}
+    .colorrow{margin:12px 0 18px;padding-bottom:13px;border-bottom:1px solid #e9edf4}
+    .colorname{font-size:14px;font-weight:800;display:block;margin-bottom:10px}
+    .coloroptions{display:flex;gap:9px;flex-wrap:wrap}
+    .swatch{width:39px;height:39px;border-radius:12px;border:2px solid transparent;font-size:19px;font-weight:900;color:#192f4c}
+    .swatch.selected{outline:2px solid #263c5c;outline-offset:2px}
+    .coloredchip{border-color:var(--chip-border,#dce5ef);background:var(--chip-bg,#eef3f8);color:var(--chip-fg,#305d80)}
+    .coloredchip.active{background:var(--chip-fg,#254d87);border-color:var(--chip-fg,#254d87);color:#fff}
+    .copyaction{font-size:12px;color:#245eae;font-weight:800}
+    .empty{margin-top:35px;padding:38px 18px;text-align:center;color:#7b8ba0}
+    .emptyicon{font-size:45px;display:block;margin-bottom:10px}
+    .empty h3{color:#2e4666;font-size:17px;margin:0 0 9px}
+    .empty p{font-size:13px;line-height:1.7;margin:0}
+    .add{position:fixed;z-index:5;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 34px);max-width:646px;min-height:57px;background:#244f8e;color:white;border:none;border-radius:17px;box-shadow:0 9px 28px rgba(33,72,134,.26);font-weight:800;font-size:16px}
+    .add:active{background:#1d4074}
+    dialog{border:0;border-radius:20px;padding:0;width:min(93vw,510px);max-height:90dvh;overflow:auto;box-shadow:0 14px 70px rgba(25,45,71,.22);color:#14243c;background:#fff}
+    dialog::backdrop{background:rgba(14,29,53,.45)}
+    .modalbody{padding:22px}
+    .modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .modalhead h2{margin:0;font-size:19px}
+    .close{border:0;background:#f0f3f8;color:#52677d;font-size:23px;border-radius:10px;width:35px;height:35px}
+    .field{display:block;font-weight:800;font-size:13px;margin:15px 0}
+    .field input,.field textarea{display:block;width:100%;margin-top:8px;border:1px solid #d8e0eb;border-radius:12px;padding:11px 12px;background:#fff;color:#152741;font-size:16px}
+    .field textarea{resize:vertical;min-height:140px;line-height:1.5}
+    .hint{font-weight:400;color:#8998a8;font-size:12px;margin:7px 0}
+    .modalactions{display:flex;gap:9px;margin-top:20px}
+    .primary,.secondary,.danger{border-radius:12px;padding:12px;font-size:14px;font-weight:800;min-height:46px}
+    .primary{background:#244f8e;color:white;border:1px solid #244f8e;flex:1}
+    .secondary{background:#fff;color:#395879;border:1px solid #dce4ef;flex:1}
+    .danger{background:#fff;color:#b13a43;border:1px solid #f0c9d0}
+    .hidden{display:none!important}
+    .settingsnote{font-size:13px;line-height:1.75;color:#62748b;margin:10px 0 22px}
+    .settingblock{background:#f7f9fc;padding:15px;border-radius:12px;margin:12px 0}
+    .settingblock h3{margin:0 0 7px;font-size:14px}
+    .settingblock p{font-size:12px;line-height:1.6;color:#65788f;margin:0 0 12px}
+    .settingblock button{width:100%}
+    .settingblock label{display:block;text-align:center;border:1px solid #dce4ef;background:white;border-radius:12px;padding:12px;font-weight:800;font-size:14px;color:#395879;cursor:pointer}
+    .toast{position:fixed;z-index:20;bottom:calc(94px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,12px);min-width:190px;max-width:calc(100vw - 36px);text-align:center;padding:12px 16px;border-radius:100px;background:#1c344f;color:#fff;font-weight:800;font-size:13px;box-shadow:0 10px 32px #1c344f44;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="head">
+      <div><p class="eyebrow">MY CLIPBOARD</p><h1>ワンタップコピー</h1><p class="sub">よく使う文章を、タップするだけでコピー</p></div>
+      <button class="settings" id="settingsButton" type="button" aria-label="設定とバックアップ">⚙</button>
+    </header>
+    <div class="searchwrap"><span aria-hidden="true">⌕</span><input type="search" id="search" placeholder="登録した文章を検索" autocomplete="off" aria-label="登録した文章を検索"></div>
+    <nav class="chips" id="categories" aria-label="カテゴリーを選ぶ"></nav>
+    <div class="line"><h2 id="listTitle">すべての文章</h2><div class="lineactions"><span class="count" id="count">0件</span><button type="button" id="reorderButton" class="reorder">↕ 並べ替え</button></div></div>
+    <p id="reorderHint" class="reorderhint hidden">「上へ」「下へ」を押して順番を変更してください。変更は自動保存されます。</p>
+    <section class="entries" id="entries" aria-label="登録した文章"></section>
+    <div class="empty hidden" id="empty"><span class="emptyicon">📋</span><h3 id="emptyTitle">まだ文章がありません</h3><p id="emptyText">下の「＋ 新しく登録」から、<br>よく使う文章を追加してください。</p></div>
+  </main>
+  <button class="add" type="button" id="addButton">＋ 新しく登録</button>
+  <dialog id="editDialog" aria-labelledby="editTitle">
+    <form id="entryForm" class="modalbody">
+      <div class="modalhead"><h2 id="editTitle">文章を登録</h2><button type="button" class="close" data-close="editDialog" aria-label="閉じる">×</button></div>
+      <label class="field">タイトル<input id="entryTitle" placeholder="例：自分の住所" maxlength="80" required autocomplete="off"></label>
+      <label class="field">コピーする文章<textarea id="entryText" placeholder="ここにコピーしたい文章を入力" maxlength="10000" required></textarea><p class="hint">改行もそのままコピーされます。</p></label>
+      <label class="field">カテゴリー<input id="entryCategory" placeholder="例：連絡・仕事・住所" maxlength="32" list="categorySuggestions" autocomplete="off"><datalist id="categorySuggestions"><option value="連絡"></option><option value="仕事"></option><option value="住所"></option><option value="その他"></option></datalist></label>
+      <div class="modalactions"><button class="danger hidden" id="deleteButton" type="button">削除</button><button class="secondary" data-close="editDialog" type="button">キャンセル</button><button class="primary" type="submit">保存する</button></div>
+    </form>
+  </dialog>
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+    <div class="modalbody">
+      <div class="modalhead"><h2 id="settingsTitle">設定・バックアップ</h2><button type="button" class="close" data-close="settingsDialog" aria-label="閉じる">×</button></div>
+      <p class="settingsnote">文章はこのアプリを開いている端末内に保存されます。サーバーへの送信や他端末との同期はしません。アプリを削除した場合などに備え、ときどきバックアップを保存してください。</p>
+      <section class="settingblock"><h3>カテゴリーの色分け</h3><p>カテゴリーごとに好きな色を設定できます。</p><button class="secondary" type="button" id="colorsButton">カテゴリーの色を変更</button></section>
+      <section class="settingblock"><h3>バックアップを保存</h3><p>登録した全文章をJSONファイルとして保存します。ファイルには文章が平文で含まれるため、保管先に注意してください。</p><button class="secondary" type="button" id="exportButton">バックアップを書き出す</button></section>
+      <section class="settingblock"><h3>バックアップから復元</h3><p>保存したJSONを読み込みます。現在の登録内容は置き換わります。</p><label for="importFile">ファイルを選んで復元</label><input class="hidden" type="file" id="importFile" accept=".json,application/json"></section>
+      <p class="settingsnote">パスワードや認証コードなどの機密情報は登録しないでください。</p>
+    </div>
+  </dialog>
+  <dialog id="colorsDialog" aria-labelledby="colorsTitle">
+    <div class="modalbody"><div class="modalhead"><h2 id="colorsTitle">カテゴリーの色を変更</h2><button type="button" class="close" data-close="colorsDialog" aria-label="閉じる">×</button></div>
+    <p class="settingsnote">色をタップすると、同じカテゴリーの文章すべてに反映されます。変更は自動保存されます。</p>
+    <div id="colorList"></div>
+    <button class="primary" style="width:100%" type="button" data-close="colorsDialog">完了</button></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      'use strict';
+      // 旧版と同じ保存キーを維持し、既に登録した文章を引き継ぎます。
+      const STORAGE_KEY = 'one_tap_copy_items_v1';
+      const COLORS_KEY = 'one_tap_copy_category_colors_v1';
+      const PALETTE = [
+        {id:'blue',name:'青',bg:'#e9f2ff',fg:'#27578d',border:'#adcdf1'},
+        {id:'mint',name:'緑',bg:'#e3f6ee',fg:'#246a52',border:'#a5dac7'},
+        {id:'pink',name:'ピンク',bg:'#ffecf2',fg:'#974768',border:'#f3bed2'},
+        {id:'orange',name:'オレンジ',bg:'#fff0df',fg:'#935520',border:'#f6d3a5'},
+        {id:'purple',name:'紫',bg:'#f0ecff',fg:'#68549c',border:'#cdc3f3'},
+        {id:'yellow',name:'黄色',bg:'#fff8d8',fg:'#786124',border:'#e7d693'},
+        {id:'gray',name:'グレー',bg:'#edf1f5',fg:'#596776',border:'#d2dbe5'}
+      ];
+      const $ = id => document.getElementById(id);
+      let items = [];
+      let category = 'すべて';
+      let editingId = null;
+      let reorderMode = false;
+      let categoryColors = {};
+      let toastTimer;
+
+      function newId() {
+        return (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+      function toast(message) {
+        const el = $('toast');
+        el.textContent = message;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 1900);
+      }
+      function isEntry(x) { return !!x && typeof x === 'object' && typeof x.title === 'string' && typeof x.text === 'string' && typeof x.category === 'string'; }
+      function cleanEntry(x) {
+        return {
+          id:typeof x.id==='string' ? x.id : newId(),
+          title:x.title.slice(0,80),text:x.text.slice(0,10000),category:x.category.slice(0,32)||'その他',
+          favorite:!!x.favorite,created:Number.isFinite(x.created)?x.created:Date.now(),
+          order:Number.isSafeInteger(x.order)&&x.order>=0?x.order:null,
+          copies:Number.isSafeInteger(x.copies)&&x.copies>=0?x.copies:0
+        };
+      }
+      function load() {
+        try {
+          const value=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+          const loaded=Array.isArray(value)?value.filter(isEntry).map(cleanEntry):[];
+          const validOrders=loaded.every(x=>x.order!==null)&&new Set(loaded.map(x=>x.order)).size===loaded.length;
+          if(validOrders) loaded.sort((a,b)=>a.order-b.order);
+          else loaded.sort((a,b)=>Number(b.favorite)-Number(a.favorite)||b.created-a.created);
+          items=loaded.map((x,i)=>({...x,order:i}));
+          // 初期版の順序を最初だけ引き継ぎ、以降は手動の並び順で保存する。
+          if(!validOrders && items.length) {
+            try {localStorage.setItem(STORAGE_KEY,JSON.stringify(items));} catch(err) { /* 次回の保存で再試行 */ }
+          }
+        } catch (err) {items=[];toast('保存データを読み込めませんでした');}
+        try {
+          const stored=JSON.parse(localStorage.getItem(COLORS_KEY)||'{}');
+          categoryColors=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};
+        } catch(err) {categoryColors={};}
+      }
+      function save(next) {
+        const ordered=next.map((x,i)=>({...x,order:i}));
+        try {localStorage.setItem(STORAGE_KEY,JSON.stringify(ordered));items=ordered;return true;}
+        catch(err) {alert('保存に失敗しました。iPhoneの空き容量やブラウザの保存設定を確認してください。');return false;}
+      }
+      function saveColors(next) {
+        try {localStorage.setItem(COLORS_KEY,JSON.stringify(next));categoryColors=next;return true;}
+        catch(err) {alert('色の保存に失敗しました。iPhoneの空き容量を確認してください。');return false;}
+      }
+      function paletteFor(cat) {
+        let hash=0;
+        for(const char of cat) hash=(hash*31+char.codePointAt(0))>>>0;
+        const id=categoryColors[cat];
+        return PALETTE.find(c=>c.id===id)||PALETTE[hash%PALETTE.length];
+      }
+      function setColor(el,cat) {
+        const c=paletteFor(cat);
+        el.style.backgroundColor=c.bg;el.style.color=c.fg;return c;
+      }
+      function renderColors() {
+        const holder=$('colorList');holder.replaceChildren();
+        const cats=[...new Set(items.map(x=>x.category))];
+        if(!cats.length){holder.appendChild(element('p','settingsnote','まだカテゴリーがありません。文章を登録してから設定できます。'));return;}
+        for(const cat of cats){
+          const row=element('section','colorrow');
+          row.appendChild(element('span','colorname',cat));
+          const options=element('div','coloroptions');
+          const selected=paletteFor(cat).id;
+          for(const c of PALETTE){
+            const btn=element('button',`swatch${c.id===selected?' selected':''}`,c.id===selected?'✓':'');
+            btn.type='button';btn.style.backgroundColor=c.bg;btn.style.borderColor=c.border;
+            btn.setAttribute('aria-label',`${cat}を${c.name}にする`);
+            btn.setAttribute('aria-pressed',String(c.id===selected));
+            btn.addEventListener('click',()=>{if(saveColors({...categoryColors,[cat]:c.id})){renderColors();render();}});
+            options.appendChild(btn);
+          }
+          row.appendChild(options);holder.appendChild(row);
+        }
+      }
+      function element(tag, className, content) {
+        const el = document.createElement(tag);
+        if(className) el.className = className;
+        if(content !== undefined) el.textContent = content;
+        return el;
+      }
+      function categories() {
+        const cats = ['すべて','お気に入り',...new Set(items.map(x=>x.category))];
+        if(!cats.includes(category)) category='すべて';
+        const holder=$('categories'); holder.replaceChildren();
+        cats.forEach(cat=>{
+          const btn=element('button',`chip${cat===category?' active':''}`,cat);
+          btn.type='button';btn.setAttribute('aria-pressed',String(cat===category));
+          if(cat!=='すべて'&&cat!=='お気に入り'){
+            const c=paletteFor(cat);
+            btn.classList.add('coloredchip');
+            btn.style.setProperty('--chip-bg',c.bg);
+            btn.style.setProperty('--chip-fg',c.fg);
+            btn.style.setProperty('--chip-border',c.border);
+          }
+          btn.addEventListener('click',()=>{category=cat;reorderMode=false;render();});
+          holder.appendChild(btn);
+        });
+      }
+      function moveItem(id,delta) {
+        const from=items.findIndex(x=>x.id===id), to=from+delta;
+        if(from<0||to<0||to>=items.length)return;
+        const next=[...items];[next[from],next[to]]=[next[to],next[from]];
+        if(save(next))render();
+      }
+      function render() {
+        categories();
+        const q=$('search').value.normalize('NFKC').toLowerCase().trim();
+        const canReorder=category==='すべて'&&!q;
+        if(!canReorder)reorderMode=false;
+        $('reorderButton').disabled=!canReorder||items.length<2;
+        $('reorderButton').textContent=reorderMode?'✓ 完了':'↕ 並べ替え';
+        $('reorderButton').classList.toggle('active',reorderMode);
+        $('reorderHint').classList.toggle('hidden',!reorderMode);
+        const selected=items.filter(x=>{
+          const matchesCategory=category==='すべて'||(category==='お気に入り'?x.favorite:x.category===category);
+          const matchesText=!q||`${x.title} ${x.text} ${x.category}`.normalize('NFKC').toLowerCase().includes(q);
+          return matchesCategory&&matchesText;
+        });
+        $('listTitle').textContent=category==='すべて'?'すべての文章':category;
+        $('count').textContent=`${selected.length}件`;
+        const holder=$('entries');holder.replaceChildren();
+        for(const x of selected) {
+          const color=paletteFor(x.category);
+          const card=element('article','entry');
+          card.style.setProperty('--cat-accent',color.border);
+          const row=element('div','entrytop');
+          row.appendChild(element('span','entrytitle',x.title));
+          const star=element('button',`favorite${x.favorite?' selected':''}`,x.favorite?'★':'☆');
+          star.type='button';star.setAttribute('aria-label',`${x.title}を${x.favorite?'お気に入りから外す':'お気に入りにする'}`);
+          star.addEventListener('click',()=>{if(save(items.map(y=>y.id===x.id?{...y,favorite:!y.favorite}:y))){render();}});
+          row.appendChild(star);
+          const edit=element('button','edit','編集');edit.type='button';
+          edit.setAttribute('aria-label',`${x.title}を編集`);
+          edit.addEventListener('click',()=>openEdit(x));row.appendChild(edit);card.appendChild(row);
+          if(reorderMode){
+            const move=element('div','movebar');
+            for(const [delta,label] of [[-1,'↑ 上へ'],[1,'↓ 下へ']]){
+              const btn=element('button','movebutton',label);btn.type='button';
+              btn.disabled=delta<0?x.order===0:x.order===items.length-1;
+              btn.setAttribute('aria-label',`${x.title}を${delta<0?'上':'下'}へ移動`);
+              btn.addEventListener('click',()=>moveItem(x.id,delta));move.appendChild(btn);
+            }
+            card.appendChild(move);
+          }
+          const copy=element('button','copy');copy.type='button';
+          copy.setAttribute('aria-label',`${x.title}の文章をコピー`);
+          copy.appendChild(element('span','textcontent',x.text));
+          const bottom=element('span','copyfoot');
+          const left=element('span','copyfootleft');
+          const badge=element('span','category',x.category);setColor(badge,x.category);
+          left.appendChild(badge);left.appendChild(element('span','copycount',`コピー ${x.copies}回`));
+          bottom.appendChild(left);
+          bottom.appendChild(element('span','copyaction','タップでコピー ⧉'));
+          copy.appendChild(bottom);
+          copy.addEventListener('click',()=>copyEntry(x.id));
+          card.appendChild(copy);holder.appendChild(card);
+        }
+        const empty=selected.length===0;
+        $('empty').classList.toggle('hidden',!empty);
+        $('emptyTitle').textContent=items.length===0?'まだ文章がありません':'該当する文章がありません';
+        $('emptyText').textContent=items.length===0?'下の「＋ 新しく登録」から、よく使う文章を追加してください。':'検索語やカテゴリーを変えてみてください。';
+      }
+      async function copyEntry(id) {
+        const entry=items.find(x=>x.id===id);
+        if(!entry)return;
+        let success=false;
+        try {
+          if(navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(entry.text);
+            success=true;
+          }
+        } catch(err) { /* HTTPS環境でないとき等は旧方式に切り替える */ }
+        if(!success){
+          const ta=document.createElement('textarea');
+          ta.value=entry.text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';
+          ta.setAttribute('readonly','');document.body.appendChild(ta);
+          ta.focus();ta.select();ta.setSelectionRange(0,entry.text.length);
+          try {success=document.execCommand('copy');}catch(err){success=false;}
+          ta.remove();
+        }
+        if(success){
+          const current=items.find(x=>x.id===id);
+          if(current){
+            // コピーが成功した場合だけ、その項目の回数を加算。
+            const next=items.map(x=>x.id===id?{...x,copies:Math.min(Number.MAX_SAFE_INTEGER,x.copies+1)}:x);
+            if(save(next)){render();toast('✓ コピーしました');}
+            else toast('✓ コピーしました（回数は保存できませんでした）');
+          }
+        }else toast('コピーできませんでした。HTTPSで公開したアプリから試してください。');
+      }
+      function openEdit(x) {
+        editingId=x?x.id:null;
+        $('editTitle').textContent=x?'文章を編集':'文章を登録';
+        $('entryTitle').value=x?x.title:'';
+        $('entryText').value=x?x.text:'';
+        $('entryCategory').value=x?x.category:'';
+        $('deleteButton').classList.toggle('hidden',!x);
+        $('editDialog').showModal();
+      }
+      $('entryForm').addEventListener('submit',event=>{
+        event.preventDefault();
+        const title=$('entryTitle').value.trim();
+        const text=$('entryText').value.trim();
+        const cat=$('entryCategory').value.trim()||'その他';
+        if(!title||!text){toast('タイトルと文章を入力してください');return;}
+        const current=items.find(x=>x.id===editingId);
+        const updated={id:editingId||newId(),title,text,category:cat,favorite:current?.favorite||false,created:current?.created||Date.now(),order:current?.order??0,copies:current?.copies??0};
+        const next=current?items.map(x=>x.id===current.id?updated:x):[updated,...items];
+        if(save(next)){$('editDialog').close();category='すべて';$('search').value='';render();toast(current?'保存しました':'登録しました');}
+      });
+      $('deleteButton').addEventListener('click',()=>{
+        const current=items.find(x=>x.id===editingId);
+        if(current&&confirm(`「${current.title}」を削除しますか？\nこの操作は取り消せません。`)){
+          if(save(items.filter(x=>x.id!==current.id))){$('editDialog').close();render();toast('削除しました');}
+        }
+      });
+      document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',() => $(btn.dataset.close).close()));
+      $('addButton').addEventListener('click',()=>openEdit(null));
+      $('settingsButton').addEventListener('click',()=>$('settingsDialog').showModal());
+      $('colorsButton').addEventListener('click',()=>{renderColors();$('settingsDialog').close();$('colorsDialog').showModal();});
+      $('reorderButton').addEventListener('click',()=>{reorderMode=!reorderMode;render();});
+      $('search').addEventListener('input',render);
+      $('exportButton').addEventListener('click',()=>{
+        const data=JSON.stringify({app:'ワンタップコピー',version:2,exportedAt:new Date().toISOString(),items,categoryColors},null,2);
+        const blob=new Blob([data],{type:'application/json;charset=utf-8'});
+        const url=URL.createObjectURL(blob);const a=document.createElement('a');
+        a.href=url;a.download=`one-tap-copy-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+        toast('バックアップを作成しました');
+      });
+      $('importFile').addEventListener('change',async event=>{
+        const file=event.target.files?.[0];if(!file)return;
+        try {
+          if(file.size>15*1024*1024)throw Error('大きすぎるファイルです');
+          const data=JSON.parse(await file.text());
+          if(data.app!=='ワンタップコピー'||![1,2].includes(data.version)||!Array.isArray(data.items)||data.items.length>1000||!data.items.every(isEntry))throw Error('対応していないバックアップ形式です');
+          const restored=data.items.map(x=>({...cleanEntry(x),id:newId()}));
+          const hasOrders=restored.every(x=>x.order!==null)&&new Set(restored.map(x=>x.order)).size===restored.length;
+          if(hasOrders)restored.sort((a,b)=>a.order-b.order);
+          else restored.sort((a,b)=>Number(b.favorite)-Number(a.favorite)||b.created-a.created);
+          const validColors={};
+          if(data.version===2&&data.categoryColors&&typeof data.categoryColors==='object'&&!Array.isArray(data.categoryColors)){
+            for(const [key,val] of Object.entries(data.categoryColors)){
+              if(key.length<=32&&PALETTE.some(c=>c.id===val))validColors[key]=val;
+            }
+          }
+          if(confirm(`バックアップの${restored.length}件を復元しますか？\n現在の${items.length}件はすべて置き換わります。`)){
+            if(save(restored)){saveColors(validColors);$('settingsDialog').close();category='すべて';$('search').value='';reorderMode=false;render();toast('復元しました');}
+          }
+        }catch(err){alert(`読み込みに失敗しました。${err.message}`);}
+        finally{event.target.value='';}
+      });
+      load();render();
+      if('serviceWorker' in navigator && location.protocol==='https:') {
+        window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+      }
+    })();
+  </script>
+</body>
+</html>
